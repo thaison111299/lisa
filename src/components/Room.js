@@ -5,6 +5,7 @@ import { Drafts } from '@material-ui/icons';
 import { setRoom } from '../redux/ducks/reducer'
 import { useDispatch, useSelector } from 'react-redux';
 import socket from '../socket';
+import { AvatarGroup } from '@material-ui/lab';
 
 const useStyles = makeStyles((theme) => ({
   room: {
@@ -14,6 +15,9 @@ const useStyles = makeStyles((theme) => ({
   username: {
     marginLeft: '10px',
   },
+  avatar: {
+    border: '2px solid black'
+  }
 }));
 
 
@@ -31,7 +35,13 @@ export default function Room(props) {
 
   return (
     <ListItem button onClick={handleClick}>
-      <Avatar src={room.picture} />
+      <AvatarGroup>
+        {
+          room.memberPictures.map(pic => <Avatar className={classes.avatar} src={pic} />)
+        }
+
+      </AvatarGroup>
+
       <Typography className={classes.username} >{room.name}</Typography>
     </ListItem>
   )

@@ -7,7 +7,8 @@ import Room from './Room'
 import { useAuth0 } from '@auth0/auth0-react';
 import socket from '../socket';
 import { useDispatch, useSelector } from 'react-redux';
-import { setRoom, setFriends, setRooms } from '../redux/ducks/reducer'
+import { setRoom, setRooms } from '../redux/ducks/reducer'
+import friend, { setFriendList, setNewFriend } from '../redux/ducks/friend'
 
 
 const useStyles = makeStyles((theme) => ({
@@ -37,35 +38,39 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 
-export default function Friends(props) {
+export default function FriendList(props) {
   const { logout } = useAuth0()
   const classes = useStyles()
   // const user = useSelector(state => state.reducer.user)
   const { user } = props
-  const friends = useSelector(state => state.reducer.friends)
+  const friendList = useSelector(state => state.friendReducer.friendList)
+  const newFriend = useSelector(state => state.friendReducer.newFriend)
   const rooms = useSelector(state => state.reducer.rooms)
-  const [newUser, setNewUser] = useState(null)
   const [nameList, setNameList] = useState([])
+  const [pictureList, setPictureList] = useState([])
   const [open, setOpen] = useState(false)
-
   const dispatch = useDispatch()
 
   useEffect(() => {
-    socket.on('send users', users => {
-      console.log('send users')
-      console.log(users)
-      // users = users.filter(guy => guy.email !== user.email) // unness
-      dispatch(setFriends(users))
+    socket.on('user list', userList => dispatch(setFriendList(userList)))
+    socket.on('new user', user => { // G
+      dispatch(setNewFriend(user))
     })
 
+    socket.on('room list', rooms => {
+      rooms = rooms.filter(r => {
+        return r.memberNames.length > 2 && r.name.includes(user.nickname)
+      })
 
-    socket.on('rooms', rooms => {
-      console.log('rooms:', rooms.length)
       dispatch(setRooms(rooms))
     })
 
-
   }, [socket])
+
+  // Append new friend to friend list
+  useEffect(() => {
+    if (newFriend) dispatch(setFriendList([...friendList, newFriend]))
+  }, [newFriend])
 
 
   const handleLogout = () => {
@@ -83,30 +88,54 @@ export default function Friends(props) {
   };
 
   const handleCheck = (e) => {
-    let nickname = e.target.value
+    let { value } = e.target
+    let [nickname, picture] = value.split('@@@')
     // alert(nickname)
-    if (e.target.checked)
+    if (e.target.checked) {
       setNameList([...nameList, nickname])
+      setPictureList([...pictureList, picture])
+    }
+
     else {
-      let clone = [...nameList]
-      clone = clone.filter(name => name !== e.target.value)
-      setNameList(clone)
+      let cloneName = [...nameList]
+      let clonePicture = [...pictureList]
+
+      cloneName = cloneName.filter(n => n !== nickname)
+      clonePicture = clonePicture.filter(p => p !== picture)
+      setNameList(cloneName)
+      setPictureList(clonePicture)
     }
   }
 
 
   const handleCreateGroupChat = () => {
-    let clone = [...nameList, user.nickname]
+    if (nameList.length <= 0)
+      return
+
+    let cloneName = [...nameList, user.nickname]
+    let clonePicture = [...pictureList, user.picture]
 
     let room = {
       by: user,
-      name: clone.sort().join(' and '),
-      picture: null
+      memberNames: cloneName,
+      memberPictures: clonePicture,
+      name: cloneName.sort().join(' and ')
     }
 
-    socket.emit('create room', room)
     dispatch(setRoom(room))
     setNameList([])
+    setPictureList([])
+
+    // let room = {
+    //   by: user,
+    //   name: [user.nickname, friend.nickname].sort().join(' and '),
+    //   memberNames: [user.name, friend.name],
+    //   memberPictures: [user.picture, friend.picture]
+    // }
+
+    // dispatch(setRoom(room)) // here 
+
+
   }
 
   return (
@@ -131,11 +160,12 @@ export default function Friends(props) {
 
       <List component="nav" aria-label="main mailbox folders">
         {
-          friends.map((friend, i) => {
+          friendList.map((friend, i) => {
             return <Friend friend={friend} key={i} />
           })
         }
-        <Typography> Rooms: </Typography>
+        <hr />
+        <Typography> Groupchat: </Typography>
         {
           rooms.map((room, i) => {
             return <Room room={room} key={i} />
@@ -147,9 +177,7 @@ export default function Friends(props) {
 
         variant='extended' className={classes.create} color="primary" aria-label="add">
         <Add />
-        <Typography>
-          group chat
-        </Typography>
+        <Typography>Groupchat</Typography>
         <PeopleAltOutlined />
       </Fab>
 
@@ -157,17 +185,15 @@ export default function Friends(props) {
         <Paper>
           <List>
             {
-              friends.map(friend => {
+              friendList.map(friend => {
                 return (
                   <ListItem >
                     <Avatar src={friend.picture} />
                     <Typography>{friend.nickname}</Typography>
-                    <Checkbox onChange={handleCheck} value={friend.nickname} />
+                    <Checkbox onChange={handleCheck} value={friend.nickname + "@@@" + friend.picture} />
                   </ListItem>
                 )
               })
-
-
             }
 
 

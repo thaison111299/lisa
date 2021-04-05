@@ -3,49 +3,32 @@ import { makeStyles } from '@material-ui/core/styles';
 import { AppBar, Avatar, Divider, Grid, List, ListItem, ListItemAvatar, ListItemIcon, ListItemText, Toolbar, Typography } from '@material-ui/core'
 import { setRoom } from '../redux/ducks/reducer'
 import { useDispatch } from 'react-redux';
-function Message(props) {
+import socket from '../socket';
+import { useState, useEffect } from 'react';
+import { AvatarGroup } from '@material-ui/lab';
+export default function Inbox(props) {
   const { message, user } = props
-
   const dispatch = useDispatch()
 
 
+  useEffect(() => {
+    socket.on('room', room => dispatch(setRoom(room)))
+  }, [socket])
+
+
   const handleClick = () => {
-    let friend = message.room.members.find(mem => mem.email !== user.email)
-    let room
-    if (friend) {
-      room = {
-        by: user,
-        picture: friend.picture,
-        target: friend,
-        name: [user.nickname, friend.nickname].sort().join(' and '),
-        members: [user, friend],
-      }
-    } else {
-      room = {
-        by: user,
-        picture: null,
-        target: null,
-        name: `room of ${user.nickname}`,
-        member: [user],
-      }
-    }
-
-
-    // console.log(room)
-    dispatch(setRoom(room))
-
-
-
+    socket.emit('get room', message.roomName)
   }
+
   return (
     <>
       <ListItem
         onClick={handleClick}
         button
         alignItems="flex-start">
-        <ListItemAvatar>
+        <AvatarGroup>
           <Avatar src={message.by.picture} alt="Travis Howard" />
-        </ListItemAvatar>
+        </AvatarGroup>
         <ListItemText
           primary={message.by.name}
           secondary={message.text}
@@ -55,5 +38,3 @@ function Message(props) {
     </>
   )
 }
-
-export default Message

@@ -8,7 +8,6 @@ import socket from '../socket';
 
 const useStyles = makeStyles((theme) => ({
   friends: {
-    // background: 'orange',
     height: '750px',
   },
   username: {
@@ -20,7 +19,6 @@ const useStyles = makeStyles((theme) => ({
 export default function Friend(props) {
   const { friend } = props
   const user = useSelector(state => state.reducer.user)
-  // useSelector
   const dispatch = useDispatch()
   const classes = useStyles()
 
@@ -29,10 +27,11 @@ export default function Friend(props) {
     let room = {
       by: user,
       name: [user.nickname, friend.nickname].sort().join(' and '),
-      picture: friend.picture
+      memberNames: [user.name, friend.name],
+      memberPictures : [user.picture, friend.picture]
     }
-    socket.emit('create room', room)
-    dispatch(setRoom(room))
+
+    dispatch(setRoom(room)) // here 
   }
 
   return (

@@ -1,6 +1,4 @@
 const SET_USER = 'reducer/setUser'
-const SET_FRIENDS = 'reducer/setFriends'
-const SET_NEW_PERSON = 'reducer/setNewPerson'
 const SET_MESSAGES = 'reducer/setMessages'
 const SET_NEW_MESSAGE = 'reducer/setNewMessage'
 const SET_TARGET = 'reducer/setTarget'
@@ -14,17 +12,6 @@ export const setUser = user => ({
   value: user
 })
 
-// 2
-export const setFriends = friends => ({
-  type: SET_FRIENDS,
-  value: friends
-})
-
-// 3
-export const setNewPerson = newPerson => ({
-  type: SET_NEW_PERSON,
-  value: newPerson
-})
 
 // 4
 export const setRoom = room => ({
@@ -66,8 +53,8 @@ export const setRooms = rooms => ({
 
 const initState = {
   user: null,
-  friends: [],
-  newPerson: null,
+  friendList: [],
+  newFriend: null,
   room: null,
   target: null,
   newMessages: null,
@@ -80,10 +67,6 @@ export default (state = initState, action) => {
   switch (action.type) {
     case SET_USER:
       return { ...state, user: action.value }
-    case SET_FRIENDS:
-      return { ...state, friends: action.value }
-    case SET_NEW_PERSON:
-      return { ...state, newPerson: action.value }
     case SET_ROOM:
       return { ...state, room: action.value }
     case SET_TARGET:

@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import { makeStyles } from '@material-ui/core/styles';
 import { AppBar, Avatar, Container, Divider, Grid, List, ListItem, ListItemAvatar, ListItemIcon, ListItemText, Toolbar, Typography } from '@material-ui/core'
-import Message from './Message';
+import Inbox from './Inbox';
 import socket from '../socket';
 
+import { useDispatch, useSelector } from 'react-redux'
+import { setInboxList } from '../redux/ducks/inbox'
 // ListItemAvatar
 // Divider
 
@@ -30,20 +32,19 @@ const useStyles = makeStyles((theme) => ({
 
 }));
 
-function Messages(props) {
+export default function InboxList(props) {
   const { user } = props
+  const inboxList = useSelector(state => state.inboxReducer.inboxList)
+  const newMessage = useSelector(state => state.messageReducer.newMessage)
+  const dispatch = useDispatch()
   const classes = useStyles()
-  const [messages, setMessages] = useState([])
 
   useEffect(() => {
-    // socket.emit('get inboxs', user)
-  }, [])
+    if (newMessage)
+      dispatch(setInboxList([newMessage, ...inboxList.filter(m => m.roomName !== newMessage.roomName)]))
 
-  useEffect(() => {
-    socket.on('inboxs', messages => {
-      setMessages(messages)
-    })
-  }, [socket])
+  }, [newMessage])
+
 
   return (
     <Grid className={classes.messages} item xs sm={4} md={3}>
@@ -64,9 +65,9 @@ function Messages(props) {
 
       <List className={classes.messagesContainer}>
         {
-          messages.map((message) => {
+          inboxList.map((message) => {
             return (
-              <Message key={message._id} message={message} user={user} />
+              <Inbox key={message._id} message={message} user={user} />
             )
           })
         }
@@ -77,4 +78,4 @@ function Messages(props) {
   )
 }
 
-export default Messages
+
